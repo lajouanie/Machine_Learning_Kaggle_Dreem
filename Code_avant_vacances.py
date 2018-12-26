@@ -379,3 +379,48 @@ def max_value_sampled(Features, lst_data, dset):
         Features[str(i)+'MMD'+str(j)] = Data_Frame.sum(1)
     
     return Features
+
+
+#ESIS
+    
+
+def ESIS(X, Band, Fs):
+
+    C = np.fft.fft(X)
+    C = abs(C)
+    C = np.square(C)
+    Power = np.zeros(len(Band) - 1)
+    for Freq_Index in range(0, len(Band) - 1):
+        Freq = float(Band[Freq_Index])
+        Next_Freq = float(Band[Freq_Index + 1])
+        Power[Freq_Index] = np.sum(
+            C[int(Freq / Fs * len(X)) : int(Next_Freq / Fs * len(X))]
+        )
+        Power[Freq_Index] = 100*Power[Freq_Index]*1/2*(Next_Freq+Freq)
+    Power_Ratio = Power / sum(Power)
+    
+    return Power, Power_Ratio
+
+
+def ESIS_features(Features, lst_data, dset):
+    
+    for i in lst_data :
+        Dset_int=dset[i]
+        Resultat_int = np.apply_along_axis(ESIS,1,Dset_int, Band = [0.5,4,7,12,30], Fs = len(Dset_int[1])/30)
+        Array_somme_frequence = Resultat_int[:,0,:]
+        Array_somme_frequence = pd.DataFrame(Array_somme_frequence)
+        Array_somme_frequence.columns = ['Delta_esis','Theta_esis','Alpha_esis','Beta_esis']
+        Array_somme_frequence_normalisee = Resultat_int[:,1,:]
+        Array_somme_frequence_normalisee = pd.DataFrame(Array_somme_frequence_normalisee)
+        Array_somme_frequence_normalisee.columns = ['Delta_esis__N','Theta_esis__N','Alpha_esis__N','Beta_esis__N']
+        Features[str(i)+'Delta_esis'] = Array_somme_frequence['Delta_esis']
+        Features[str(i)+'Theta_esis'] = Array_somme_frequence['Theta_esis']
+        Features[str(i)+'Alpha_esis'] = Array_somme_frequence['Alpha_esis']
+        Features[str(i)+'Beta_esis'] = Array_somme_frequence['Beta_esis']
+        Features[str(i)+'Delta_esis__N'] = Array_somme_frequence_normalisee['Delta_esis__N']
+        Features[str(i)+'Theta_esis__N'] = Array_somme_frequence_normalisee['Theta_esis__N']
+        Features[str(i)+'Alpha_esis__N'] = Array_somme_frequence_normalisee['Alpha_esis__N']
+        Features[str(i)+'Beta_esis__N'] = Array_somme_frequence_normalisee['Beta_esis__N']
+       
+    return Features
+ 
